@@ -1,16 +1,10 @@
 from __future__ import annotations
 
 import types
-from typing import (
-    Any,
-    Hashable,
-    Iterator,
-    Mapping,
-    NoReturn,
-    Self,
-    Sequence,
-    cast,
-)
+from typing import TYPE_CHECKING, Hashable, Mapping, Sequence, cast
+
+if TYPE_CHECKING:
+    from typing import Any, Iterator, NoReturn, Self
 
 import numpy as np
 
