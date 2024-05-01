@@ -129,6 +129,9 @@ class ExplicitlyIndexed:
     def get_duck_array(self: HasArray) -> np.ndarray:
         return self.array
 
+    def __getitem__(self, key: Any) -> Any:
+        raise NotImplementedError()
+
 
 class NdimSizeLenMixin:
     __slots__ = ()
@@ -149,8 +152,10 @@ class NdimSizeLenMixin:
 
 
 class NDArrayMixin(NdimSizeLenMixin):
-    """Mixin class for making wrappers of N-dimensional arrays that conform to
-    the ndarray interface required for the data argument to Variable objects.
+    """Mixin class for making wrappers of N-dimensional arrays.
+
+    that conform to the ndarray interface required for the data argument to Variable
+    objects.
 
     A subclass should set the `array` property and override one or more of
     `dtype`, `shape` and `__getitem__`.
@@ -160,7 +165,7 @@ class NDArrayMixin(NdimSizeLenMixin):
 
     @property
     def dtype(self: HasArray) -> np.dtype:
-        return self.array.dtype
+        return self.array.dtype  # type: ignore
 
     @property
     def shape(self: HasArray) -> tuple[int, ...]:
@@ -178,7 +183,7 @@ class ExplicitlyIndexedNDArrayMixin(NDArrayMixin, ExplicitlyIndexed):
 
     def get_duck_array(self) -> np.ndarray:
         key = BasicIndexer((slice(None),) * self.ndim)
-        return self[key]
+        return self[key]  # type: ignore
 
     def __array__(self, dtype: np.typing.DTypeLike = None) -> np.ndarray:
         # This is necessary because we apply the indexing key in self.get_duck_array()

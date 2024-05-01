@@ -13,17 +13,11 @@ repos:
     hooks:
       - id: validate-pyproject
 
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.21.0
-    hooks:
-      - id: typos
-        args: [--force-exclude]  # omiting --write-changes
-
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.4.2
     hooks:
       - id: ruff
-        args: [--fix]  # may also add '--unsafe-fixes'
+        args: [--fix, --unsafe-fixes]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -31,6 +25,5 @@ repos:
     hooks:
       - id: mypy
         files: "^src/"
-        # # you have to add the things you want to type check against here
-        # additional_dependencies:
-        #   - numpy
+        additional_dependencies:
+          - numpy

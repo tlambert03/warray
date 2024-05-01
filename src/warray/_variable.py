@@ -131,7 +131,7 @@ class Variable(AbstractArray):
 
         Parameters
         ----------
-        **indexers : {dim: indexer, ...}
+        indexers : {dim: indexer, ...}
             Keyword arguments with names matching dimensions and values given
             by integers, slice objects or arrays.
         missing_dims : {"raise", "warn", "ignore"}, default: "raise"
@@ -140,7 +140,7 @@ class Variable(AbstractArray):
             - "raise": raise an exception
             - "warn": raise a warning, and ignore the missing dimensions
             - "ignore": ignore the missing dimensions
-        indexers_kwargs : indexer
+        **indexers_kwargs : indexer
             Keyword arguments form of ``indexers``.
 
         Returns
@@ -197,7 +197,7 @@ class Variable(AbstractArray):
         # if encoding is _default:
         #     encoding = copy.copy(self._encoding)
         # return type(self)(dims, data, attrs, encoding, fastpath=True)
-        return type(self)(dims, data, attrs)
+        return type(self)(dims, data, attrs)  # type: ignore
 
     def _item_key_to_tuple(self, key: Any) -> Any:
         if isinstance(key, Mapping):

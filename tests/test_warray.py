@@ -54,8 +54,8 @@ def test_basic_array(case: Case) -> None:
     wa0 = wa[0]
     xa0 = xa[0]
 
-    xa_sel0 = xa.isel({case.expected_dims[0]: 0})
-    wa_sel0 = wa.isel({case.expected_dims[0]: 0})
+    xa.isel({case.expected_dims[0]: 0})
+    wa.isel({case.expected_dims[0]: 0})
 
     assert wa0.dims == xa0.dims == case.expected_dims[1:]
     assert set(wa0.coords) == set(xa0.coords) == case.expected_coords

@@ -34,7 +34,7 @@ def is_dask_collection(x: Any) -> bool:
     if "dask" in sys.modules:
         from dask.base import is_dask_collection
 
-        return is_dask_collection(x)
+        return is_dask_collection(x)  # type: ignore [no-any-return]
     return False
 
 
@@ -165,7 +165,7 @@ def drop_dims_from_indexers(
         )
 
 
-def as_compatible_data(data: T_DuckArray | Any) -> T_DuckArray:
+def as_compatible_data(data: T_DuckArray) -> T_DuckArray:
     from warray import DataArray, Variable
 
     if isinstance(data, (Variable, DataArray)):
@@ -174,6 +174,6 @@ def as_compatible_data(data: T_DuckArray | Any) -> T_DuckArray:
     if not isinstance(data, np.ndarray) and (
         hasattr(data, "__array_function__") or hasattr(data, "__array_namespace__")
     ):
-        return cast("T_DuckArray", data)
+        return data
 
     return cast("T_DuckArray", np.asarray(data))

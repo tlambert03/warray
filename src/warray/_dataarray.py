@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import types
-from typing import TYPE_CHECKING, Hashable, Mapping, Sequence, cast
+from typing import TYPE_CHECKING, Generic, Hashable, Mapping, Sequence, cast
 
 import numpy as np
 
 from ._common import AbstractArray
 from ._util import (
     ErrorOptionsWithWarn,
+    T_DuckArray,
     as_compatible_data,
     either_dict_or_kwargs,
     expanded_indexer,
@@ -19,12 +20,12 @@ if TYPE_CHECKING:
     from typing import Any, Iterator, NoReturn, Self
 
 
-class DataArray(AbstractArray):
+class DataArray(AbstractArray, Generic[T_DuckArray]):
     __module__ = "warray"
 
     def __init__(
         self,
-        data: Any,
+        data: T_DuckArray | Variable,
         coords: Sequence[Sequence[Any] | DataArray] | Mapping[Any, Any] | None = None,
         dims: Hashable | Sequence[Hashable] | None = None,
         name: Hashable | None = None,
@@ -115,7 +116,7 @@ class DataArray(AbstractArray):
     #     try:
     #         var = self._coords[key]
     #     except KeyError:
-    #         raise NotImplementedError("xarray-style indexing not yet implemente")
+    #         raise NotImplementedError("xarray-style indexing not yet implemented")
     #         # dim_sizes = dict(zip(self.dims, self.shape))
     #         # _, key, var = _get_virtual_variable(self._coords, key, dim_sizes)
 
@@ -360,7 +361,7 @@ def _infer_coords_and_dims(
         elif coords is not None:
             for dim, coord in zip(dims, coords):
                 var = as_variable(coord, name=str(dim))
-                var.dims = (dim,)
+                var.dims = (str(dim),)
                 tmp_coords[dim] = var
         # FIXME
         new_coords = Coordinates(tmp_coords)
