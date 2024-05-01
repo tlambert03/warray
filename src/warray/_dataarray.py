@@ -3,9 +3,6 @@ from __future__ import annotations
 import types
 from typing import TYPE_CHECKING, Hashable, Mapping, Sequence, cast
 
-if TYPE_CHECKING:
-    from typing import Any, Iterator, NoReturn, Self
-
 import numpy as np
 
 from ._common import AbstractArray
@@ -17,6 +14,9 @@ from ._util import (
     is_fancy_indexer,
 )
 from ._variable import Variable, as_variable
+
+if TYPE_CHECKING:
+    from typing import Any, Iterator, NoReturn, Self
 
 
 class DataArray(AbstractArray):
