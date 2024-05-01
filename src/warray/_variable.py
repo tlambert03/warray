@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import math
 import types
-from typing import Any, Hashable, Iterable, Mapping, Self, Sequence
+from typing import TYPE_CHECKING, Hashable, Iterable, Mapping
 
 import numpy as np
 
@@ -23,6 +23,9 @@ from ._util import (
     either_dict_or_kwargs,
     expanded_indexer,
 )
+
+if TYPE_CHECKING:
+    from typing import Any, Self, Sequence
 
 _default = object()
 _Dim = Hashable

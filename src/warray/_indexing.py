@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import math
 import operator
-from typing import Any, Iterable, Protocol, SupportsIndex
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 import numpy.typing as npt
+
+if TYPE_CHECKING:
+    from typing import Any, Iterable, SupportsIndex
+
 
 integer_types = (int, np.integer)
 BASIC_INDEXING_TYPES = (*integer_types, slice)
@@ -20,7 +26,7 @@ def as_integer_slice(value: slice) -> slice:
     return slice(start, stop, step)
 
 
-def as_indexable(array: Any) -> "ExplicitlyIndexed":
+def as_indexable(array: Any) -> ExplicitlyIndexed:
     """Always returns a ExplicitlyIndexed subclass...
 
     so that the vectorized indexing is always possible with the returned

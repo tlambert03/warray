@@ -2,17 +2,11 @@ from __future__ import annotations
 
 import sys
 import warnings
-from typing import (
-    Any,
-    Hashable,
-    Iterable,
-    Literal,
-    Mapping,
-    Protocol,
-    TypeGuard,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Hashable, Literal, Mapping, Protocol, TypeVar, cast
+
+if TYPE_CHECKING:
+    from typing import Any, Iterable, TypeGuard
+
 
 import numpy as np
 
