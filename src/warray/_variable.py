@@ -25,12 +25,13 @@ from ._util import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Self, Sequence
+    from typing import Any, Iterable, Self, Sequence, TypeAlias
+
+    _Dim: TypeAlias = Hashable
+    _Dims: TypeAlias = "tuple[_Dim, ...]"
+    _DimsLike:TypeAlias = "str | Iterable[_Dim]"
 
 _default = object()
-_Dim = Hashable
-_Dims = tuple[_Dim, ...]
-_DimsLike = str | Iterable[_Dim]
 
 
 class Variable(AbstractArray):
