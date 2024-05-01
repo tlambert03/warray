@@ -7,6 +7,7 @@ from typing import Any, Hashable, Iterable, Mapping, Self, Sequence
 
 import numpy as np
 
+from ._common import AbstractArray
 from ._indexing import (
     BASIC_INDEXING_TYPES,
     BasicIndexer,
@@ -29,7 +30,7 @@ _Dims = tuple[_Dim, ...]
 _DimsLike = str | Iterable[_Dim]
 
 
-class Variable:
+class Variable(AbstractArray):
     def __init__(
         self,
         dims: Sequence[str],

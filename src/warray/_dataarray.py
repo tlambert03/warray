@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from ast import Not
 import types
 from typing import (
-    TYPE_CHECKING,
     Any,
     Hashable,
     Iterator,
@@ -14,6 +12,9 @@ from typing import (
     cast,
 )
 
+import numpy as np
+
+from ._common import AbstractArray
 from ._util import (
     ErrorOptionsWithWarn,
     as_compatible_data,
@@ -23,11 +24,10 @@ from ._util import (
 )
 from ._variable import Variable, as_variable
 
-if TYPE_CHECKING:
-    import numpy as np
 
+class DataArray(AbstractArray):
+    __module__ = "warray"
 
-class DataArray:
     def __init__(
         self,
         data: Any,
@@ -240,10 +240,18 @@ class DataArray:
         variable = self._variable.isel(indexers, missing_dims=missing_dims)
         # indexes, index_variables = isel_indexes(self.xindexes, indexers)
 
+        # HACK: here's one place we're avoiding complexity and losing features
+        # xarray uses indices, we're just using coords and dims
+        new_dims = tuple(
+            dim
+            for dim in self._dims
+            if dim not in indexers or not isinstance(indexers[dim], (int, np.integer))
+        )
+
         coords = {}
         for coord_name, coord_value in self._coords.items():
             # if coord_name in index_variables:
-                # coord_value = index_variables[coord_name]
+            # coord_value = index_variables[coord_name]
             # else:
             coord_indexers = {
                 k: v for k, v in indexers.items() if k in coord_value.dims
@@ -255,13 +263,14 @@ class DataArray:
             coords[coord_name] = coord_value
 
         # return self._replace(variable=variable, coords=coords, indexes=indexes)
-        return self._replace(variable=variable, coords=coords)
+        return self._replace(variable=variable, dims=new_dims, coords=coords)
 
     def _replace(
         self,
         variable: Variable | None = None,
         coords: Any = None,
         name: Hashable | None = None,
+        dims: Hashable | Sequence[Hashable] | None = None,
         indexes: Any = None,
     ) -> Self:
         if variable is None:
@@ -269,11 +278,28 @@ class DataArray:
         if coords is None:
             coords = self._coords
         # if indexes is None:
-            # indexes = self._indexes
+        # indexes = self._indexes
+        if dims is None:
+            dims = self._dims
         if name is None:
             name = self.name
         # return type(self)(variable, coords, name=name, indexes=indexes, fastpath=True)
-        return type(self)(variable, coords, name=name)
+        return type(self)(variable, coords, dims=dims, name=name)
+
+    def __repr__(self) -> str:
+        sizes = ", ".join(f"{k}: {v}" for k, v in self.sizes.items())
+        lines = [
+            f"<warray.DataArray ({sizes})> Size: {self.nbytes}B",
+            repr(self.values),
+            "Coordinates:",
+        ]
+        for dim, coord in self.coords.items():
+            star = "*" if dim in self.dims else " "
+            dim_names = f"({', '.join(str(x) for x in coord.dims)})"
+            dtype = coord.dtype
+            line_repr = repr(coord.data)[:50]
+            lines.append(f"  {star} {dim:<8} {dim_names} {dtype} {line_repr}")
+        return "\n".join(lines)
 
 
 class Coordinates(Mapping[Hashable, DataArray]):
