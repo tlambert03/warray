@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ast import Not
 import types
 from typing import (
     TYPE_CHECKING,
@@ -116,44 +117,45 @@ class DataArray:
         key = expanded_indexer(key, self.ndim)
         return dict(zip(self.dims, key))
 
-    def _getitem_coord(self, key: Any) -> Self:
-        try:
-            var = self._coords[key]
-        except KeyError:
-            raise NotImplementedError("xarray-style indexing not yet implemente")
-            # dim_sizes = dict(zip(self.dims, self.shape))
-            # _, key, var = _get_virtual_variable(self._coords, key, dim_sizes)
+    # def _getitem_coord(self, key: Any) -> Self:
+    #     try:
+    #         var = self._coords[key]
+    #     except KeyError:
+    #         raise NotImplementedError("xarray-style indexing not yet implemente")
+    #         # dim_sizes = dict(zip(self.dims, self.shape))
+    #         # _, key, var = _get_virtual_variable(self._coords, key, dim_sizes)
 
-        return self._replace_maybe_drop_dims(var, name=key)
+    #     return self._replace_maybe_drop_dims(var, name=key)
 
-    def _replace_maybe_drop_dims(
-        self,
-        variable: Variable,
-        name: Hashable | None = None,
-    ) -> Self:
-        if variable.dims == self.dims and variable.shape == self.shape:
-            coords = self._coords.copy()
-            indexes = self._indexes
-        elif variable.dims == self.dims:
-            # Shape has changed (e.g. from reduce(..., keepdims=True)
-            new_sizes = dict(zip(self.dims, variable.shape))
-            coords = {
-                k: v
-                for k, v in self._coords.items()
-                if v.shape == tuple(new_sizes[d] for d in v.dims)
-            }
-            indexes = filter_indexes_from_coords(self._indexes, set(coords))
-        else:
-            allowed_dims = set(variable.dims)
-            coords = {
-                k: v for k, v in self._coords.items() if set(v.dims) <= allowed_dims
-            }
-            indexes = filter_indexes_from_coords(self._indexes, set(coords))
-        return self._replace(variable, coords, name, indexes=indexes)
+    # def _replace_maybe_drop_dims(
+    #     self,
+    #     variable: Variable,
+    #     name: Hashable | None = None,
+    # ) -> Self:
+    #     if variable.dims == self.dims and variable.shape == self.shape:
+    #         coords = self._coords.copy()
+    #         indexes = self._indexes
+    #     elif variable.dims == self.dims:
+    #         # Shape has changed (e.g. from reduce(..., keepdims=True)
+    #         new_sizes = dict(zip(self.dims, variable.shape))
+    #         coords = {
+    #             k: v
+    #             for k, v in self._coords.items()
+    #             if v.shape == tuple(new_sizes[d] for d in v.dims)
+    #         }
+    #         indexes = filter_indexes_from_coords(self._indexes, set(coords))
+    #     else:
+    #         allowed_dims = set(variable.dims)
+    #         coords = {
+    #             k: v for k, v in self._coords.items() if set(v.dims) <= allowed_dims
+    #         }
+    #         indexes = filter_indexes_from_coords(self._indexes, set(coords))
+    #     return self._replace(variable, coords, name, indexes=indexes)
 
     def __getitem__(self, key: Any) -> Self:
         if isinstance(key, str):
-            return self._getitem_coord(key)
+            raise NotImplementedError("xarray-style indexing not yet implemented")
+            # return self._getitem_coord(key)
         else:
             # xarray-style array indexing
             return self.isel(indexers=self._item_key_to_dict(key))
@@ -236,23 +238,42 @@ class DataArray:
         # lists, or zero or one-dimensional np.ndarray's
 
         variable = self._variable.isel(indexers, missing_dims=missing_dims)
-        indexes, index_variables = isel_indexes(self.xindexes, indexers)
+        # indexes, index_variables = isel_indexes(self.xindexes, indexers)
 
         coords = {}
         for coord_name, coord_value in self._coords.items():
-            if coord_name in index_variables:
-                coord_value = index_variables[coord_name]
-            else:
-                coord_indexers = {
-                    k: v for k, v in indexers.items() if k in coord_value.dims
-                }
-                if coord_indexers:
-                    coord_value = coord_value.isel(coord_indexers)
-                    if drop and coord_value.ndim == 0:
-                        continue
+            # if coord_name in index_variables:
+                # coord_value = index_variables[coord_name]
+            # else:
+            coord_indexers = {
+                k: v for k, v in indexers.items() if k in coord_value.dims
+            }
+            if coord_indexers:
+                coord_value = coord_value.isel(coord_indexers)
+                if drop and coord_value.ndim == 0:
+                    continue
             coords[coord_name] = coord_value
 
-        return self._replace(variable=variable, coords=coords, indexes=indexes)
+        # return self._replace(variable=variable, coords=coords, indexes=indexes)
+        return self._replace(variable=variable, coords=coords)
+
+    def _replace(
+        self,
+        variable: Variable | None = None,
+        coords: Any = None,
+        name: Hashable | None = None,
+        indexes: Any = None,
+    ) -> Self:
+        if variable is None:
+            variable = self.variable
+        if coords is None:
+            coords = self._coords
+        # if indexes is None:
+            # indexes = self._indexes
+        if name is None:
+            name = self.name
+        # return type(self)(variable, coords, name=name, indexes=indexes, fastpath=True)
+        return type(self)(variable, coords, name=name)
 
 
 class Coordinates(Mapping[Hashable, DataArray]):

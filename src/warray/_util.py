@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import warnings
 from typing import (
     Any,
@@ -8,13 +9,47 @@ from typing import (
     Literal,
     Mapping,
     Protocol,
+    TypeGuard,
     TypeVar,
     cast,
 )
 
 import numpy as np
 
+# Temporary placeholder for indicating an array api compliant type.
+T_DuckArray = TypeVar("T_DuckArray", bound="DuckArray")
+T = TypeVar("T")
 ErrorOptionsWithWarn = Literal["raise", "warn", "ignore"]
+
+
+def is_duck_array(value: Any) -> TypeGuard[T_DuckArray]:
+    if isinstance(value, np.ndarray):
+        return True
+    return (
+        hasattr(value, "ndim")
+        and hasattr(value, "shape")
+        and hasattr(value, "dtype")
+        and (
+            (hasattr(value, "__array_function__") and hasattr(value, "__array_ufunc__"))
+            or hasattr(value, "__array_namespace__")
+        )
+    )
+
+
+def is_dask_collection(x: Any) -> bool:
+    if "dask" in sys.modules:
+        from dask.base import is_dask_collection
+
+        return is_dask_collection(x)
+    return False
+
+
+def is_duck_dask_array(x: Any) -> bool:
+    return is_duck_array(x) and is_dask_collection(x)
+
+
+def is_chunked_array(x: Any) -> bool:
+    return is_duck_dask_array(x) or (is_duck_array(x) and hasattr(x, "chunks"))
 
 
 class DuckArray(Protocol):
@@ -23,11 +58,6 @@ class DuckArray(Protocol):
     @property
     def dtype(self) -> np.dtype: ...
     def __getitem__(self, key: Any) -> Any: ...
-
-
-# Temporary placeholder for indicating an array api compliant type.
-T_DuckArray = TypeVar("T_DuckArray", bound=DuckArray)
-T = TypeVar("T")
 
 
 def expanded_indexer(key: Any, ndim: int) -> tuple[Any, ...]:

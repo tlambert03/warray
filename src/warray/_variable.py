@@ -7,7 +7,12 @@ from typing import Any, Hashable, Iterable, Mapping, Self, Sequence
 
 import numpy as np
 
-from ._indexing import BASIC_INDEXING_TYPES, BasicIndexer, integer_types
+from ._indexing import (
+    BASIC_INDEXING_TYPES,
+    BasicIndexer,
+    as_indexable,
+    integer_types,
+)
 from ._util import (
     DuckArray,
     ErrorOptionsWithWarn,
@@ -18,15 +23,22 @@ from ._util import (
     expanded_indexer,
 )
 
+_default = object()
 _Dim = Hashable
 _Dims = tuple[_Dim, ...]
 _DimsLike = str | Iterable[_Dim]
 
 
 class Variable:
-    def __init__(self, dims: Sequence[str], data: T_DuckArray) -> None:
+    def __init__(
+        self,
+        dims: Sequence[str],
+        data: T_DuckArray,
+        attrs: dict[Any, Any] | None = None,
+    ) -> None:
         self._data = data
         self._dims = self._parse_dimensions(dims)
+        self._attrs = dict(attrs) if attrs else None
 
     def _parse_dimensions(self, dims: _DimsLike) -> _Dims:
         dims = (dims,) if isinstance(dims, str) else tuple(dims)
@@ -155,11 +167,33 @@ class Variable:
         array `x.values` directly.
         """
         dims, indexer, new_order = self._broadcast_indexes(key)
-        # data = as_indexable(self._data)[indexer]
-        data = self._data[indexer]
+        data = as_indexable(self._data)[indexer]
         if new_order:
             data = np.moveaxis(data, range(len(new_order)), new_order)
         return self._finalize_indexing_result(dims, data)
+
+    def _finalize_indexing_result(self, dims: _Dims, data: Any) -> Self:
+        """Used by IndexVariable to return IndexVariable objects when possible."""
+        return self._replace(dims=dims, data=data)
+
+    def _replace(
+        self,
+        dims: _Dims | object = _default,
+        data: Any = _default,
+        attrs: Any = _default,
+        # encoding: Any = _default,
+    ) -> Self:
+        if dims is _default:
+            dims = copy.copy(self._dims)
+        if data is _default:
+            data = copy.copy(self.data)
+        if attrs is _default:
+            attrs = copy.copy(self._attrs)
+
+        # if encoding is _default:
+        #     encoding = copy.copy(self._encoding)
+        # return type(self)(dims, data, attrs, encoding, fastpath=True)
+        return type(self)(dims, data, attrs)
 
     def _item_key_to_tuple(self, key: Any) -> Any:
         if isinstance(key, Mapping):
